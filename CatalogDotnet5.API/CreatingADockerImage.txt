@@ -1,0 +1,41 @@
+1) Docker does not allow https so in the Startup.cs file change this code
+            if (env.IsDevelopment()) 
+            {
+                app.UseHttpsRedirection();
+            }
+
+2) Install the Docker extension in VSCode if it is not already installed
+3) View-->Command Palette (Ctrl+Shift+P) docker:Add Docker Files to Workspace
+4) Pick .NET ASP.NET Core
+5) Pick Linux
+6) Pick Port 80
+7) Docker Compose Files --> No
+8) This should add 2 files (Dockerfile and .dockerignore)
+
+--Docker provides a single command that will clean up any resources — images, containers, volumes, and networks — that are dangling (not associated with a container):
+docker system prune 
+
+--To additionally remove any stopped containers and all unused images (not just dangling images), add the -a flag to the command:
+docker system prune -a
+
+-- we are ready to build the docker image now
+9) docker build -t catalogdotnet5:v1 .
+
+-- Now we have to make the catalogdotnet5 image talk to the mongo image
+10) docker network create catalogdotnet5mongodb
+-- verify it was created correctly
+11) docker network ls 
+-- stop the mongodb container if it is running (docker ps)
+12) docker stop mongo
+-- run our container with the network name now
+13) docker run -d --rm --name mongo -p 27017:27017 -v mongodbdata:/data/db -e MONGO_INITDB_ROOT_USERNAME=mongodbadmin -e MONGO_INITDB_ROOT_PASSWORD=Pass#word1 --network catalogdotnet5mongodb mongo
+14) docker ps (to verify that it is working)
+-- view our created images
+15) docker images
+15.5) if the microsoft images do not get listed do the following
+      docker pull mcr.microsoft.com/dotnet/aspnet:5.0
+      docker pull mcr.microsoft.com/dotnet/sdk:5.0
+-- connect to our mongodb database
+-it (interactive - keeps terminal connected to the docker run process) -rm (to remove the container after use) -p (port)
+-e (environment - host is mongo now not localhost since its a shared env) 
+16) docker run -it --rm -p 8080:80 -e MongoDbSettings.Host=mongo -e MongoDbSettings.Password=Pass#word1 --network=catalogdotnet5mongodb catalogdotnet5:v1
